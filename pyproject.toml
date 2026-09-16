@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lambda-cloud-mcp"
+version = "0.1.0"
+description = "MCP server for the Lambda Cloud API: find, price and (optionally) launch GPU instances from an AI agent. Read-only by default."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Anton Dziatkovskii" }]
+keywords = ["mcp", "lambda-cloud", "gpu", "model-context-protocol"]
+dependencies = ["mcp>=1.2", "httpx>=0.27"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "respx>=0.21"]
+
+[project.scripts]
+lambda-cloud-mcp = "lambda_cloud_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/tonydzi/lambda-cloud-mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lambda_cloud_mcp"]

@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use lambda-cloud-mcp in research or software, please cite it as below."
+title: "lambda-cloud-mcp"
+type: software
+authors:
+  - family-names: Dziatkovskii
+    given-names: Anton
+    orcid: "https://orcid.org/0000-0001-7408-3054"
+    affiliation: "Palo Alto AI Research Lab"
+repository-code: "https://github.com/tonydzi/lambda-cloud-mcp"
+url: "https://github.com/tonydzi/lambda-cloud-mcp"
+license: MIT
+date-released: "2026-09-16"
+keywords:
+  - mcp
+  - model-context-protocol
+  - lambda-cloud
+  - gpu
+  - agent-tools
+abstract: >-
+  An MCP server for the Lambda Cloud API: GPU prices, live capacity,
+  cheapest-available lookup, and env-gated launch/restart/terminate behind a
+  required hourly price cap. Read-only by default; write tools are hidden from
+  the agent unless LAMBDA_MCP_ALLOW_WRITE=1. Not affiliated with Lambda.

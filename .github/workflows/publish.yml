@@ -1,0 +1,71 @@
+# Publish to PyPI on every published GitHub release.
+#
+# Uses PyPI Trusted Publishing (OIDC): no API token is stored anywhere, not in a
+# repository secret and not on a laptop. PyPI verifies the workflow's identity.
+#
+# ONE-TIME SETUP, on the PyPI side, before the first release:
+#   https://pypi.org/manage/account/publishing/
+#   owner       tonydzi
+#   repository  lambda-cloud-mcp
+#   workflow    publish.yml
+#   environment pypi
+# Skip it and this job fails with `invalid-publisher` while still reporting a
+# valid OIDC token — the failure that left secondop-panel v0.1.1 at 404 on
+# 2026-08-29 while its release notes claimed it had shipped.
+name: publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check --strict dist/*
+      - name: The wheel must be installable before it is publishable
+        # A wheel can break without a single test failing — a bad entry point, a
+        # file left out of the build, a dependency that only exists on the
+        # author's machine. A release is the last moment anyone can stop one.
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+          test -x /tmp/clean/bin/lambda-cloud-mcp \
+            || { echo "::error::entry point lambda-cloud-mcp missing from wheel"; exit 1; }
+      - name: The server must answer the MCP handshake with its real version
+        # serverInfo.version defaults to an empty string in the SDK; clients
+        # display that field, and an empty one makes a bug report impossible to
+        # pin to a build.
+        run: |
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+            | timeout 30 /tmp/clean/bin/lambda-cloud-mcp > /tmp/hs.json 2>/dev/null || true
+          /tmp/clean/bin/python -c "import json,sys; v=json.load(open('/tmp/hs.json'))['result']['serverInfo']['version']; print('serverInfo.version =', repr(v)); sys.exit(0 if v.strip() else '::error::server advertised an empty version')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # the whole point: OIDC instead of a stored token
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

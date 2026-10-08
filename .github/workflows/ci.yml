@@ -18,3 +18,34 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[test]"
       - run: pytest -q
+
+  package:
+    # `pip install -e .` in the job above runs the source tree, never the wheel.
+    # This is the only place that proves `pip install lambda-cloud-mcp` yields a
+    # working entry point on the declared floor — without it the PyPI page would
+    # be an untested claim.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: build and validate the distributions
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check --strict dist/*
+      - name: install the wheel into a bare environment and run the suite against it
+        run: |
+          python -m venv /tmp/pkgenv
+          /tmp/pkgenv/bin/pip install dist/*.whl pytest respx
+          test -x /tmp/pkgenv/bin/lambda-cloud-mcp \
+            || { echo "::error::entry point missing from wheel"; exit 1; }
+          # run from a directory where ./src is not importable, so the wheel is
+          # what is under test and not the checkout
+          mkdir -p /tmp/pkgtest && cp -R tests /tmp/pkgtest/tests
+          cd /tmp/pkgtest && /tmp/pkgenv/bin/python -m pytest -q tests

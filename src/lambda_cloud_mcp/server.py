@@ -13,10 +13,27 @@ try:  # mcp SDK 2.x
 except ImportError:  # mcp SDK 1.x
     from mcp.server.fastmcp import FastMCP as _Server
 
+from . import __version__
 from .client import (LambdaClient, check_price, flatten_types, pick_cheapest,
                      require_write, write_enabled)
 
-mcp = _Server("lambda-cloud")
+
+def _build_server():
+    """The server, reporting its real version in the initialize handshake.
+
+    Left at the SDK default this field is an empty string, which clients show
+    verbatim and which makes a bug report impossible to pin to a build. The
+    keyword is passed defensively because this module supports two SDK
+    generations and only one is exercised in CI.
+    """
+    try:
+        return _Server("lambda-cloud", version=__version__)
+    except TypeError:
+        # Older SDK without the keyword: a nameless version beats no server.
+        return _Server("lambda-cloud")
+
+
+mcp = _build_server()
 client = LambdaClient()
 
 

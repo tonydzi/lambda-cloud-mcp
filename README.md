@@ -1,5 +1,69 @@
 # lambda-cloud-mcp
 
+Lets an AI agent check GPU prices and availability on Lambda Cloud, find the cheapest free GPU, and see your instances.
+
+**Who it's for:** people who rent GPUs on Lambda and use an AI agent such as Claude Code or Claude Desktop.
+**What you get:** the agent answers "is an H100 free, where, and how much per hour?" in one step. It is read-only by default. Launching costs money, so it is off until you switch it on, and it has a price limit.
+
+## Quick start
+1. Get an API key from the Lambda Cloud API keys page: https://cloud.lambda.ai/api-keys
+2. Install [uv](https://docs.astral.sh/uv/) (or use pip, see below).
+3. Add the server to Claude Code, putting your key in place of `your-key`:
+   `claude mcp add lambda-cloud -e LAMBDA_API_KEY=your-key -- uvx --from git+https://github.com/tonydzi/lambda-cloud-mcp lambda-cloud-mcp`
+
+**Done when:** you ask your agent "what is the cheapest available GPU on Lambda?" and it answers with a price per hour.
+
+> Not affiliated with Lambda. Tested against mocked API responses; a live test is still pending.
+
+> Want an AI agent to do it for you? Paste this to Claude Code / Codex / Cursor:
+> "Read the 'For AI agents' section of https://github.com/tonydzi/lambda-cloud-mcp and set it up for me."
+
+## For AI agents
+
+### Preconditions
+- Python 3.10 or newer, and `uv` (for `uvx`) or `pip`.
+- A Lambda API key. Ask the human for it. Never invent one.
+- Ask the human whether launch/restart/terminate (paid, partly irreversible) should be enabled. Default answer: no.
+
+### Install
+Either, with uv (no install step):
+```
+uvx --from git+https://github.com/tonydzi/lambda-cloud-mcp lambda-cloud-mcp
+```
+or with pip:
+```
+pip install git+https://github.com/tonydzi/lambda-cloud-mcp
+```
+The console command is `lambda-cloud-mcp`.
+
+### Configure
+- `LAMBDA_API_KEY` (required, from the human): read only from this env var.
+- `LAMBDA_MCP_ALLOW_WRITE=1` (optional, only with the human's explicit yes): enables `launch_instance`, `restart_instances`, `terminate_instances`.
+- Register with Claude Code (read-only):
+  ```
+  claude mcp add lambda-cloud -e LAMBDA_API_KEY=<key-from-human> -- uvx --from git+https://github.com/tonydzi/lambda-cloud-mcp lambda-cloud-mcp
+  ```
+- Claude Desktop: add an `mcpServers.lambda-cloud` entry with `command: uvx`, `args: ["--from", "git+https://github.com/tonydzi/lambda-cloud-mcp", "lambda-cloud-mcp"]` and `env.LAMBDA_API_KEY`. Full JSON is in Details.
+
+### Verify
+Without any key, from a clone (mocked HTTP, no real calls):
+```
+uv venv && uv pip install -e ".[test]"
+.venv/bin/pytest -q
+```
+Expected: `14 passed`, exit code 0 (real run 2026-11-13 in a fresh venv with `pip install -e ".[test]"`: 14 passed). With a key: the agent calls `list_instance_types` and gets a list sorted cheapest first.
+
+### Uninstall / rollback
+`claude mcp remove lambda-cloud`, then `pip uninstall lambda-cloud-mcp` if you used pip. Remove the key from your shell or config. If write mode was on, remove `LAMBDA_MCP_ALLOW_WRITE`.
+
+### Rules for the agent
+- Never print, log or commit the API key.
+- Do not set `LAMBDA_MCP_ALLOW_WRITE=1` unless the human said yes in this conversation.
+- Never launch or terminate instances without the human naming the exact instance and price limit. Termination is irreversible.
+- Lambda rate-limits to about 1 request per second (launch: 1 per 12 seconds). Do not loop calls.
+
+## Details
+
 An MCP server for the [Lambda Cloud API](https://docs-api.lambda.ai/api/cloud).
 It lets an AI agent (Claude Code, Claude Desktop, or any MCP client) check GPU prices and capacity, find the cheapest GPU that is available right now, and see your instances.
 

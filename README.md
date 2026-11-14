@@ -46,12 +46,14 @@ The console command is `lambda-cloud-mcp`.
 - Claude Desktop: add an `mcpServers.lambda-cloud` entry with `command: uvx`, `args: ["--from", "git+https://github.com/tonydzi/lambda-cloud-mcp", "lambda-cloud-mcp"]` and `env.LAMBDA_API_KEY`. Full JSON is in Details.
 
 ### Verify
-Without any key, from a clone (mocked HTTP, no real calls):
+Step 1, no key needed, from a clone (mocked HTTP, no real calls). Works on Windows, macOS and Linux:
 ```
-uv venv && uv pip install -e ".[test]"
-.venv/bin/pytest -q
+uv run --extra test pytest -q
 ```
-Expected: `14 passed`, exit code 0 (real run 2026-11-13 in a fresh venv with `pip install -e ".[test]"`: 14 passed). With a key: the agent calls `list_instance_types` and gets a list sorted cheapest first.
+Expected: `14 passed`, exit code 0 (real run 2026-11-13). Without uv: `pip install -e ".[test]"` then `python -m pytest -q`.
+This proves the code logic against mocked answers only. It does not prove your key works or that the live API still matches.
+
+Step 2, needs the key and the server registered (see Configure): restart the agent, then ask it to call `list_instance_types`. A working setup returns a list of objects with `name`, `gpu_description`, `price_usd_per_hour` and `regions_with_capacity`, cheapest first. A wrong key returns an error text like `Lambda API 401 on /instance-types: global/invalid-api-key`. The live call has not been run by the author yet, so treat a mismatch as news and report it.
 
 ### Uninstall / rollback
 `claude mcp remove lambda-cloud`, then `pip uninstall lambda-cloud-mcp` if you used pip. Remove the key from your shell or config. If write mode was on, remove `LAMBDA_MCP_ALLOW_WRITE`.
@@ -177,8 +179,7 @@ Every endpoint and field comes from Lambda's public OpenAPI spec, version 1.10.0
 ## Development
 
 ```bash
-uv venv && uv pip install -e ".[test]"
-.venv/bin/pytest -q
+uv run --extra test pytest -q
 ```
 
 Tests use [respx](https://lundberg.github.io/respx/) to mock HTTP. No real API calls, no key needed.

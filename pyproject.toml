@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lambda-cloud-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for the Lambda Cloud API: find, price and (optionally) launch GPU instances from an AI agent. Read-only by default."
 readme = "README.md"
 license = "MIT"

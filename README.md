@@ -1,5 +1,7 @@
 # lambda-cloud-mcp
 
+<!-- mcp-name: io.github.tonydzi/lambda-cloud-mcp -->
+
 Lets an AI agent check GPU prices and availability on Lambda Cloud, find the cheapest free GPU, and see your instances.
 
 **Who it's for:** people who rent GPUs on Lambda and use an AI agent such as Claude Code or Claude Desktop.

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.tonydzi/lambda-cloud-mcp",
+  "title": "Lambda Cloud",
+  "description": "Lambda Cloud GPU prices, availability and instances for AI agents. Read-only by default.",
+  "repository": {
+    "url": "https://github.com/tonydzi/lambda-cloud-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/tonydzi/lambda-cloud-mcp",
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "lambda-cloud-mcp",
+      "version": "0.1.1",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "LAMBDA_API_KEY",
+          "description": "Lambda Cloud API key from https://cloud.lambda.ai/api-keys",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "LAMBDA_MCP_ALLOW_WRITE",
+          "description": "Set to 1 to enable launch, restart and terminate tools (these cost money)",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "LAMBDA_API_BASE_URL",
+          "description": "Override the API base URL (default https://cloud.lambda.ai)",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

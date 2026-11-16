@@ -1,0 +1,14 @@
+{
+  "name": "lambda-cloud-mcp",
+  "version": "0.1.1",
+  "description": "Lambda Cloud GPU prices, availability and instances for AI agents. Read-only by default.",
+  "mcpServers": {
+    "lambda-cloud": {
+      "command": "uvx",
+      "args": ["lambda-cloud-mcp==0.1.1"],
+      "env": {
+        "LAMBDA_API_KEY": "$LAMBDA_API_KEY"
+      }
+    }
+  }
+}
